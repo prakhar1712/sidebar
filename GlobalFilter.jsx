@@ -1,80 +1,123 @@
 import React, { useState } from 'react';
-import Dropdown from 'react-dropdown';
-import 'react-dropdown/style.css';
-import data from './data.js'; // Import the data from data.js
+
+const data = [
+  {
+    key: "1",
+    text: "Main Text 1",
+    CSR: [
+      {
+        key: "1.1",
+        text: "CSR Text 1",
+        LegalEntity: [
+          {
+            key: "1.1.1",
+            text: "LegalEntity Text 1",
+            Counterparty: [
+              { key: "1.1.1.1", text: "Counterparty Text 1" },
+              { key: "1.1.1.2", text: "Counterparty Text 2" },
+            ],
+          },
+          {
+            key: "1.1.2",
+            text: "LegalEntity Text 2",
+            Counterparty: [
+              { key: "1.1.2.1", text: "Counterparty Text 3" },
+              { key: "1.1.2.2", text: "Counterparty Text 4" },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "2",
+    text: "Main Text 2",
+    CSR: [
+      {
+        key: "2.1",
+        text: "CSR Text 2",
+        LegalEntity: [
+          {
+            key: "2.1.1",
+            text: "LegalEntity Text 3",
+            Counterparty: [
+              { key: "2.1.1.1", text: "Counterparty Text 5" },
+              { key: "2.1.1.2", text: "Counterparty Text 6" },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+const Dropdown = ({ options, selectedKey, handleChange }) => (
+  <select value={selectedKey} onChange={(e) => handleChange(e.target.value)}>
+    <option value="">Select an option</option>
+    {options.map((option) => (
+      <option key={option.key} value={option.key}>
+        {option.text}
+      </option>
+    ))}
+  </select>
+);
 
 const GlobalFilter = () => {
-    // State for selected values
-    const [selectedMain, setSelectedMain] = useState(null);
-    const [selectedCSR, setSelectedCSR] = useState(null);
-    const [selectedLegalEntity, setSelectedLegalEntity] = useState(null);
-    const [selectedCounterparty, setSelectedCounterparty] = useState(null);
+  const [selectedMain, setSelectedMain] = useState('');
+  const [selectedCSR, setSelectedCSR] = useState('');
+  const [selectedLegalEntity, setSelectedLegalEntity] = useState('');
+  const [selectedCounterparty, setSelectedCounterparty] = useState('');
 
-    // Extract options for each level based on the current selection
-    const getCSRDropdownOptions = () => {
-        if (!selectedMain) return [];
-        const mainItem = data.find(item => item.key === selectedMain.value);
-        return mainItem ? mainItem.CSR.map(csr => ({ label: csr.text, value: csr.key })) : [];
-    };
+  const handleMainChange = (key) => {
+    setSelectedMain(key);
+    setSelectedCSR('');
+    setSelectedLegalEntity('');
+    setSelectedCounterparty('');
+  };
 
-    const getLegalEntityDropdownOptions = () => {
-        if (!selectedCSR) return [];
-        const mainItem = data.find(item => item.key === selectedMain.value);
-        const csrItem = mainItem?.CSR.find(csr => csr.key === selectedCSR.value);
-        return csrItem ? csrItem.LegalEntity.map(le => ({ label: le.text, value: le.key })) : [];
-    };
+  const handleCSRChange = (key) => {
+    setSelectedCSR(key);
+    setSelectedLegalEntity('');
+    setSelectedCounterparty('');
+  };
 
-    const getCounterpartyDropdownOptions = () => {
-        if (!selectedLegalEntity) return [];
-        const mainItem = data.find(item => item.key === selectedMain.value);
-        const csrItem = mainItem?.CSR.find(csr => csr.key === selectedCSR.value);
-        const leItem = csrItem?.LegalEntity.find(le => le.key === selectedLegalEntity.value);
-        return leItem ? leItem.Counterparty.map(cp => ({ label: cp.text, value: cp.key })) : [];
-    };
+  const handleLegalEntityChange = (key) => {
+    setSelectedLegalEntity(key);
+    setSelectedCounterparty('');
+  };
 
-    return (
-        <div>
-            <Dropdown
-                options={data.map(item => ({ label: item.text, value: item.key }))}
-                onChange={(selection) => {
-                    setSelectedMain(selection);
-                    setSelectedCSR(null); // Reset subsequent selections
-                    setSelectedLegalEntity(null);
-                    setSelectedCounterparty(null);
-                }}
-                value={selectedMain}
-                placeholder="Select Main"
-            />
+  const handleCounterpartyChange = (key) => {
+    setSelectedCounterparty(key);
+  };
 
-            <Dropdown
-                options={getCSRDropdownOptions()}
-                onChange={(selection) => {
-                    setSelectedCSR(selection);
-                    setSelectedLegalEntity(null); // Reset subsequent selections
-                    setSelectedCounterparty(null);
-                }}
-                value={selectedCSR}
-                placeholder="Select CSR"
-            />
+  const selectedMainObj = data.find((item) => item.key === selectedMain);
+  const selectedCSRObj = selectedMainObj?.CSR.find((item) => item.key === selectedCSR);
+  const selectedLegalEntityObj = selectedCSRObj?.LegalEntity.find((item) => item.key === selectedLegalEntity);
 
-            <Dropdown
-                options={getLegalEntityDropdownOptions()}
-                onChange={(selection) => {
-                    setSelectedLegalEntity(selection);
-                    setSelectedCounterparty(null); // Reset subsequent selection
-                }}
-                value={selectedLegalEntity}
-                placeholder="Select Legal Entity"
-            />
+  return (
+    <div>
+      <h1>Global Filter</h1>
+      <Dropdown options={data} selectedKey={selectedMain} handleChange={handleMainChange} />
 
-            <Dropdown
-                options={getCounterpartyDropdownOptions()}
-                onChange={(selection) => setSelectedCounterparty(selection)}
-                value={selectedCounterparty}
-                placeholder="Select Counterparty"
-            />
-        </div>
-    );
+      <Dropdown
+        options={selectedMainObj?.CSR || []}
+        selectedKey={selectedCSR}
+        handleChange={handleCSRChange}
+      />
+
+      <Dropdown
+        options={selectedCSRObj?.LegalEntity || []}
+        selectedKey={selectedLegalEntity}
+        handleChange={handleLegalEntityChange}
+      />
+
+      <Dropdown
+        options={selectedLegalEntityObj?.Counterparty || []}
+        selectedKey={selectedCounterparty}
+        handleChange={handleCounterpartyChange}
+      />
+    </div>
+  );
 };
 
 export default GlobalFilter;
